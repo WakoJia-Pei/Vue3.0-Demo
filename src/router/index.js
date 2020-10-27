@@ -12,18 +12,13 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
-    meta: {
-      title: '登录界面'
-    }
+    meta: { title: '登录界面' }
   },
   {
     path: '/',
     name: 'Home',
     component: () => import('@/views/Home.vue'),
-    meta: {
-      title: '首页',
-      requireAuth: true
-    }
+    meta: { title: '首页', requireAuth: true }
   },
   {
     path: '/*',
@@ -35,7 +30,6 @@ const router = createRouter({
   base: process.env.BASE_URL,
   routes
 })
-
 // 实现全局路由守卫
 router.beforeEach((to, from, next) => {
   if (to.meta.title) {

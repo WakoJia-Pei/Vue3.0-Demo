@@ -56,14 +56,14 @@
               autocomplete="off"
               type="text"
               class="input"
-              v-model="formRegister.userName"
+              v-model:value="formRegister.userName"
               placeholder="请输入注册邮箱/手机号"
           />
           <a-input
               autocomplete="off"
               type="password"
               class="input"
-              v-model="formRegister.userPwd"
+              v-model:value="formRegister.userPwd"
               maxlength="20"
               @keyup.enter="register"
               placeholder="请输入密码"
@@ -72,7 +72,7 @@
               autocomplete="off"
               type="password"
               class="input"
-              v-model="formRegister.userPwd2"
+              v-model:value="formRegister.userPwd2"
               maxlength="20"
               @keyup.enter="register"
               placeholder="请再次确认密码"
@@ -191,8 +191,6 @@ export default {
     // }
   },
   mounted() {
-    console.log('挂载函数')
-    // this.$router.push({ path: '/' })
     this.getCookie();
     this.getCaptchaSVG()
   },
@@ -225,7 +223,7 @@ export default {
     },
     // 忘记密码界面
     forgetPwd() {
-      this.$Message.info('忘记密码，请联系客服');
+      this.$Message.info('忘记密码，暂时没做好！！！');
       // this.typeView = 2;
       // this.clearInput();
     },
@@ -236,15 +234,15 @@ export default {
         return false;
       }
 
-      // if (!this.$Valid.validUserName(this.formLogin.userName)) {
-      //   this.$Message.error('请输入正确的邮箱/手机号');
-      //   return false;
-      // }
-      //
-      // if (!this.$Valid.validPass(this.formLogin.userPwd)) {
-      //   this.$Message.error('密码应为8到20位字母或数字！');
-      //   return false;
-      // }
+      if (!this.$Valid.validUserName(this.formLogin.userName)) {
+        this.$Message.error('请输入正确的邮箱/手机号');
+        return false;
+      }
+
+      if (!this.$Valid.validPass(this.formLogin.userPwd)) {
+        this.$Message.error('密码应为8到20位字母或数字！');
+        return false;
+      }
 
       // 判断复选框是否被勾选，勾选则调用配置cookie方法
       if (this.checked) {
@@ -266,11 +264,10 @@ export default {
         console.log('登录===', res);
         this.isLoading = false;
         if (res.code == 0) {
-          this.clearInput();
-          console.log('登录返回结果', this)
-          // this.$Message.success('登录成功');
+          this.$Message.success('登录成功');
           this.$store.dispatch('userInfo/saveInfo', res.data);
           this.$router.push('/');
+          this.clearInput();
         } else {
           this.$Message.error(res.msg);
         }
@@ -307,23 +304,20 @@ export default {
         password: this.formRegister.userPwd2
       }
 
-      register(data)
-          .then(res => {
-            this.isLoading = false;
-            console.log('注册===', res);
-            if (res.code == 0) {
-              this.clearInput();
-              this.$Message.success('注册成功');
-              this.$store.dispatch('userInfo/saveInfo', res.data);
-              this.$router.push('/home');
-            } else {
-              this.$Message.error(res.msg);
-            }
-          })
-          .catch(() => {
-            this.isLoading = false;
-          })
-
+      register(data).then(res => {
+        this.isLoading = false;
+        console.log('注册===', res);
+        if (res.code == 0) {
+          this.clearInput();
+          this.$Message.success('注册成功');
+          this.$store.dispatch('userInfo/saveInfo', res.data);
+          this.$router.push('/home');
+        } else {
+          this.$Message.error(res.msg);
+        }
+      }).catch(() => {
+        this.isLoading = false;
+      })
     },
 
     // 设置cookie
