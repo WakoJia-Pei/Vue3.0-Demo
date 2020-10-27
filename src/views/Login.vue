@@ -1,8 +1,6 @@
 <template>
   <div class="login-container">
-    <div class="pageHeader">
-      <img src="../assets/logo.png" alt="logo">
-    </div>
+
 
     <div class="login-box">
       <div class="login-text" v-if="typeView != 2">
@@ -271,10 +269,9 @@ export default {
         } else {
           this.$Message.error(res.msg);
         }
-      })
-          .catch(() => {
-            this.isLoading = false;
-          });
+      }).catch(() => {
+        this.isLoading = false;
+      });
     },
 
     // 立即注册
@@ -375,7 +372,6 @@ export default {
         userPwd: '',
       }
     }
-
   }
 };
 </script>
@@ -389,27 +385,9 @@ export default {
   width: 100%;
   height: 100%;
 
-  .pageHeader {
-    padding-top: 30px;
-    padding-left: 40px;
-
-    img {
-      vertical-align: middle;
-      display: inline-block;
-      margin-right: 15px;
-    }
-
-    span {
-      font-size: 18px;
-      display: inline-block;
-      vertical-align: -4px;
-      color: rgba(255, 255, 255, 1);
-    }
-  }
-
   .login-box {
     position: absolute;
-    left: 64vw;
+    left: 36vw;
     top: 50%;
     -webkit-transform: translateY(-50%);
     transform: translateY(-50%);
@@ -568,6 +546,5 @@ export default {
   .ivu-checkbox-wrapper {
     margin-right: 0;
   }
-
 }
 </style>
