@@ -37,7 +37,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.requireAuth) {
-    console.log('Vuex状态管理的变量', store.state.userInfo.data)
+    // console.log('Vuex状态管理的变量', store.state.userInfo.data)
     if (store.state.userInfo.data.token) {
       if (to.path == '/login') {
         next('/');

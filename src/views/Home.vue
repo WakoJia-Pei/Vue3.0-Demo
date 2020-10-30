@@ -18,6 +18,10 @@
           :data-source="tableData"
           @change="handleTableChange"
       >
+        <template v-slot:name="{ text, record, index }">
+          <star-mark size="16" :is-filled="record.is_major == 0" @click="toggleFav(record, index)" ></star-mark>
+          {{text}}
+        </template>
         <template v-slot:expireDate="{text}">
           {{$Valid.formatDate(text)}}
         </template>
@@ -76,7 +80,7 @@
 
 <script>
 import Header from '@/components/Header';
-// import Footer from '@/components/Footer';
+import StarMark from '@/components/StarMark';
 import { PlusOutlined } from '@ant-design/icons-vue';
 import {
   queryTaskList,
@@ -91,8 +95,8 @@ export default {
   name: 'Home',
   components: {
     Header,
-    // Footer
-    PlusOutlined
+    StarMark,
+    PlusOutlined,
   },
   data() {
     return {
@@ -121,6 +125,7 @@ export default {
         {
           title: '任务名称',
           dataIndex: 'title',
+          slots: { customRender: 'name' }
         },
         {
           title: '任务内容',
@@ -142,7 +147,7 @@ export default {
             { text: '完成', value: 1 },
             { text: '删除', value: 2 }
           ],
-          filterMultiple: false,
+          filterMultiple: false
         },
         {
           title: '操作',
