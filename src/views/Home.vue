@@ -46,7 +46,7 @@
         :mask-closable="false"
         :loading="loading"
     >
-      <a-form :model="formValidate" ref="formValidate" :rules="ruleValidate">
+      <a-form :model="formValidate" ref="formValidate" :rules="ruleValidate" v-bind="layout">
         <a-row :gutter="32">
           <a-col span="24">
             <a-form-item label="任务名称" name="title">
@@ -65,14 +65,12 @@
         <a-form-item label="任务内容" name="content">
           <a-input type="textarea" v-model:value="formValidate.content" :rows="8" placeholder="请输入任务内容" />
         </a-form-item>
-
-        <a-form-item class="demo-drawer-footer">
-          <a-button type="primary" style="margin-right: 15px" @click="handleSubmit('formValidate')">{{ textBtn }}</a-button>
-          <a-button @click="handleReset('formValidate')" style="margin-right: 15px">重置</a-button>
-          <a-button type="error" @click="isShow = false">取消</a-button>
-        </a-form-item>
       </a-form>
-
+      <div class="demo-drawer-footer">
+        <a-button type="primary" style="margin-right: 15px" @click="handleSubmit('formValidate')">{{ textBtn }}</a-button>
+        <a-button @click="handleReset('formValidate')" style="margin-right: 15px">重置</a-button>
+        <a-button type="error" @click="isShow = false">取消</a-button>
+      </div>
     </a-drawer>
 
   </div>
@@ -103,7 +101,10 @@ export default {
       loading: true,
       pagination: {total: 0, pageSize: 10,},
       pageNo: 1,
-
+      layout: {
+        labelCol: { span: 6 },
+        wrapperCol: { span: 16 },
+      },
       status: null,
       textBtn: '提交',
       type: 1, // 1:添加 2:编辑

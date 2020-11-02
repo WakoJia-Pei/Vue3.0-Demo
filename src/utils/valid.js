@@ -39,16 +39,19 @@ export function validateNickName(name) {
   const re = /^[a-zA-Z0-9\u4E00-\u9FA5]{2,10}$/
   return re.test(name);
 }
-
+const formatNumber = n => {
+  n = n.toString()
+  return n[1] ? n : '0' + n
+}
 export function formatDate(value) {
   if (!value) {
     return '';
   }
   let d = new Date(value);
   let year = d.getFullYear();
-  let month = (d.getMonth() + 1) < 10 ? '0' + (d.getMonth() + 1) : (d.getMonth() + 1);
-  let day = d.getDate() < 10 ? '0' + d.getDate() : '' + d.getDate();
-  return  year + '-' + month + '-' + day;
+  let month = d.getMonth() + 1;
+  let day = d.getDate();
+  return  [year, month, day].map(formatNumber).join('-');
 }
 
 export function formatTime(value) {
@@ -58,23 +61,18 @@ export function formatTime(value) {
   let d = new Date(value);
   let year = d.getFullYear();
   let month = d.getMonth() + 1;
-  let day = d.getDate() < 10 ? '0' + d.getDate() : '' + d.getDate();
-  let hour = d.getHours() < 10 ? '0' + d.getHours() : '' + d.getHours();
-  let minutes = d.getMinutes() < 10 ? '0' + d.getMinutes() : '' + d.getMinutes();
-  let seconds = d.getSeconds() < 10 ? '0' + d.getSeconds() : '' + d.getSeconds();
+  let day = formatNumber(d.getDate());
+  let hour = formatNumber(d.getHours());
+  let minutes = formatNumber(d.getMinutes());
+  let seconds = formatNumber(d.getSeconds());
   return  month + '月' + day + '日' + ' ' + hour + '时';
 }
 
 export function formatHour(value) {
-  if (!value) {
-    return '';
-  }
+
   let d = new Date(value);
-  let year = d.getFullYear();
-  let month = d.getMonth() + 1;
-  let day = d.getDate() < 10 ? '0' + d.getDate() : '' + d.getDate();
   let hour = d.getHours();
-  return  hour;
+  return  !value ? '' : formatNumber(hour);
 }
 
 export function timeFromNow(value) {

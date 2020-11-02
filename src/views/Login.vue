@@ -1,7 +1,5 @@
 <template>
   <div class="login-container">
-
-
     <div class="login-box">
       <div class="login-text" v-if="typeView != 2">
         <a href="javascript:;" :class="typeView == 0 ? 'active' : ''" @click="handleTab(0)">登录</a>
@@ -23,7 +21,7 @@
               type="password"
               class="input"
               v-model:value="formLogin.userPwd"
-              maxlength="20"
+              :maxlength="20"
               @keyup.enter="login"
               placeholder="请输入登录密码"
           />
@@ -62,7 +60,7 @@
               type="password"
               class="input"
               v-model:value="formRegister.userPwd"
-              maxlength="20"
+              :maxlength="20"
               @keyup.enter="register"
               placeholder="请输入密码"
           />
@@ -71,7 +69,7 @@
               type="password"
               class="input"
               v-model:value="formRegister.userPwd2"
-              maxlength="20"
+              :maxlength="20"
               @keyup.enter="register"
               placeholder="请再次确认密码"
           />
@@ -143,6 +141,7 @@
 </template>
 
 <script>
+import { computed, reactive, toRefs } from 'vue'
 import {
   login,
   register,
@@ -151,9 +150,8 @@ import {
 
 export default {
   name: 'login',
-
-  data() {
-    return {
+  setup() {
+    const data = reactive({
       formLogin: {
         userName: '138@qq.com',
         userPwd: '12345678',
@@ -163,34 +161,24 @@ export default {
         userPwd2: '',
         userPwd: '',
       },
-      // formReset: {
-      //   userName: '',
-      //   userPwd2: '',
-      //   userPwd: '',
-      // },
       typeView: 0, //显示不同的view
       checked: false, // 记住登录
       isLoading: false,
       captchaPath: ''
-    };
+    });
+    const isDisabled = computed(() => !(data.formLogin.userName && data.formLogin.userPwd));
+    const isRegAble = computed(() => !(data.formLogin.userName && data.formLogin.userPwd && data.formRegister.userPwd2));
+
+    return {
+      ...toRefs(data),
+      isDisabled,
+      isRegAble
+    }
   },
-  computed: {
-    // 登陆按钮状态
-    isDisabled() {
-      return !(this.formLogin.userName && this.formLogin.userPwd);
-    },
-    // 注册按钮状态
-    isRegAble() {
-      return !(this.formRegister.userName && this.formRegister.userPwd && this.formRegister.userPwd2);
-    },
-    // 重置密码按钮状态
-    // isResetAble() {
-    //   return !(this.formReset.userName && this.formReset.userPwd && this.formReset.userPwd2);
-    // }
-  },
+
   mounted() {
     this.getCookie();
-    this.getCaptchaSVG()
+    this.getCaptchaSVG();
   },
   methods: {
     getCaptchaSVG() {
@@ -262,9 +250,9 @@ export default {
         console.log('登录===', res);
         this.isLoading = false;
         if (res.code == 0) {
-          this.$Message.success('登录成功');
           this.$store.dispatch('userInfo/saveInfo', res.data);
           this.$router.push('/');
+          this.$Message.success('登录成功');
           this.clearInput();
         } else {
           this.$Message.error(res.msg);

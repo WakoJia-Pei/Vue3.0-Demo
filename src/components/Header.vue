@@ -1,15 +1,13 @@
 <template>
   <div class="header-container">
     <div class="header">
-      <div class="section">
-
-      </div>
+      <div class="section"></div>
 
       <a-dropdown>
         <a class="dropdown-link" href="javascript:void(0)">
           <span class="username">{{ username }}</span>
-          <img class="avatar" src="../assets/avatar.jpg" alt="">
-          <DownOutlined />
+          <img class="avatar" src="https://avatars3.githubusercontent.com/u/15260127?s=60&v=4" alt="">
+          <DownOutlined :style="{marginLeft: '6px'}"/>
         </a>
         <template v-slot:overlay>
           <a-menu @click="changeMenu">
