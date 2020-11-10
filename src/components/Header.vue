@@ -6,10 +6,10 @@
       <div class="user-info">
         <span class="username">{{ username }}</span>
 
-        <div class="avatar" data-tip="更换头像">
+        <router-link class="avatar" data-tip="更换头像" to="/upload">
           <img src="https://portrait.gitee.com/uploads/avatars/user/767/2303431_WakoJam_1578971415.png!avatar200" alt="">
           <i class="iconfont icon-icons03" style="position: absolute; top: 50%; right: 70%; color: #1890ff; z-index: 1"></i>
-        </div>
+        </router-link>
         <a-dropdown>
           <DownOutlined :style="{marginLeft: '6px'}"/>
           <template v-slot:overlay>

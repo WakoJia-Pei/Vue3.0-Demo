@@ -15,6 +15,12 @@ const routes = [
     meta: { title: '登录界面' }
   },
   {
+    path: '/upload',
+    name: 'Upload',
+    component: () => import('@/views/Upload.vue'),
+    meta: { title: '首页', requireAuth: true }
+  },
+  {
     path: '/',
     name: 'Home',
     component: () => import('@/views/Home.vue'),
