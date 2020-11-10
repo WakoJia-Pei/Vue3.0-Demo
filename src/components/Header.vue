@@ -5,9 +5,10 @@
 
       <div class="user-info">
         <span class="username">{{ username }}</span>
-        <i class="iconfont icon-icons03" style="position: absolute; top: 1.56%; right: 13%; color: #969696; z-index: 1"></i>
+
         <div class="avatar" data-tip="更换头像">
           <img src="https://portrait.gitee.com/uploads/avatars/user/767/2303431_WakoJam_1578971415.png!avatar200" alt="">
+          <i class="iconfont icon-icons03" style="position: absolute; top: 50%; right: 70%; color: #1890ff; z-index: 1"></i>
         </div>
         <a-dropdown>
           <DownOutlined :style="{marginLeft: '6px'}"/>
