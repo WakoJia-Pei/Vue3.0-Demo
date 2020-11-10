@@ -12,7 +12,7 @@
       <a-table
           :rowKey="record => record.id"
           :loading="loading"
-          :pagination="pagination"
+          :pagination="paginationOpts"
           border
           :columns="columns"
           :data-source="tableData"
@@ -171,6 +171,11 @@ export default {
         ]
       }
 
+    }
+  },
+  computed: {
+    paginationOpts() {
+      return Math.ceil(this.pagination.total / this.pagination.pageSize) > 1 ? this.pagination : false
     }
   },
   mounted() {

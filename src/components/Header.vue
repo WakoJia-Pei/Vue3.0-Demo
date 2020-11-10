@@ -3,19 +3,24 @@
     <div class="header">
       <div class="section"></div>
 
-      <a-dropdown>
-        <a class="dropdown-link" href="javascript:void(0)">
-          <span class="username">{{ username }}</span>
-          <img class="avatar" src="https://avatars3.githubusercontent.com/u/15260127?s=60&v=4" alt="">
+      <div class="user-info">
+        <span class="username">{{ username }}</span>
+        <i class="iconfont icon-icons03" style="position: absolute; top: 1.56%; right: 13%; color: #969696; z-index: 1"></i>
+        <div class="avatar" data-tip="更换头像">
+          <img src="https://portrait.gitee.com/uploads/avatars/user/767/2303431_WakoJam_1578971415.png!avatar200" alt="">
+        </div>
+        <a-dropdown>
           <DownOutlined :style="{marginLeft: '6px'}"/>
-        </a>
-        <template v-slot:overlay>
-          <a-menu @click="changeMenu">
-            <a-menu-item key="a">修改密码</a-menu-item>
-            <a-menu-item key="b">退出</a-menu-item>
-          </a-menu>
-        </template>
-      </a-dropdown>
+          <template v-slot:overlay>
+            <a-menu @click="changeMenu">
+              <a-menu-item key="a">修改密码</a-menu-item>
+              <a-menu-item key="b">退出</a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+      </div>
+
+
     </div>
 
     <a href="https://github.com/WakoJia-Pei/Vue3.0-Demo/tree/master" target="_blank" class="github-corner">
@@ -137,7 +142,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 70px 20px 40px;
+    padding: 20px 82px 20px 40px;
     box-sizing: border-box;
     .section {
       display: flex;
@@ -157,26 +162,59 @@ export default {
         }
       }
     }
-    .dropdown-link {
+    .user-info {
       color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       .username {
         padding-right: 10px;
       }
-      .ivu-icon {
-        margin-left: 5px;
+      .avatar {
+        border-radius: 50%;
+        overflow: hidden;
+        width: 42px;
+        height: 42px;
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        img {
+          border-radius: 50%;
+          width: 100%;
+          height: 100%;
+        }
+        &::before, &::after {
+          background-color: rgba(0, 0, 0, .5);
+          opacity: 0;
+          transition: all .3s;
+        }
+
+        &::before {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          content: " ";
+        }
+        &:hover::before {
+          opacity: 0.5;
+        }
+
+        &::after {
+          content: attr(data-tip);
+          top: -82%;
+          color: #ffffff;
+          font-size: 10px;
+          position: relative;
+        }
+        &:hover::after {
+          opacity: 1;
+        }
       }
     }
     img {
       outline: none;
       &.logo {
         height: 40px;
-      }
-      &.avatar {
-        border-radius: 50%;
-        width: 42px;
-        height: 42px;
-        vertical-align: middle;
-        background: #eee;
       }
     }
 
