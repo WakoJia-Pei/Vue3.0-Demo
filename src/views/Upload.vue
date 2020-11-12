@@ -3,7 +3,7 @@
 
   <div>
     <div style="display: inline-block">
-      校验进度：<a-progress :percent="validataNum" status="active" />
+      校验进度：<a-progress :percent="validateNum" status="active" />
     </div>
     <div>
       上传进度：<a-progress :percent="uploadNum" status="active" />
@@ -13,27 +13,28 @@
 </template>
 
 <script>
+import { reactive, toRefs } from 'vue'
 const SparkMD5 = require('@/assets/libs/spark-md5.min')
-let chunkSize = 5 * 1024 * 1024
+let chunkSize = 2 * 1024 * 1024
 let fileSize = 0
 let file = null
 let hasUploaded = 0
 let chunks = 0
 import { checkFileMD5, uploadPic, finishUpload } from '@/utils/upload'
 export default {
-name: "Upload",
-  data() {
+  name: "Upload",
+  setup() {
+    const data = reactive({
+      validateNum: 10,
+      uploadNum: 70
+    })
     return {
-      file: [],
-      validateNum: 0,
-      uploadNum: 0
+      ...toRefs(data)
     }
   },
   mounted() {},
   methods: {
     getFiles(e) {
-      console.log(e.target.files[0])
-      // this.file = file[0]
       file = e.target.files[0]
       fileSize = file.size;
       this.$options.methods.responseChange(e.target.files[0])
@@ -41,18 +42,17 @@ name: "Upload",
     async responseChange(e) {
       // 第一步：按照 修改时间+文件名称+最后修改时间-->MD5
       // 开始校验
-      console.log('开始校验', e.name)
       let fileMd5Value = await this.md5File(e)
       // 第二步：校验文件的MD5
       let result = await this.checkFileMD5(e.name, fileMd5Value)
       if (result.file) {
-        alert('文件已秒传')
+        this.$Message.info('文件已秒传')
         return
       }
       // 第三步：检查并上传MD5
       await this.checkAndUploadChunk(fileMd5Value, result.chunkList)
       // 第四步: 通知服务器所有分片已上传完成
-      this.notifyServer(fileMd5Value)
+      await this.notifyServer(fileMd5Value)
     },
     md5File(file) {
       let _this = this
@@ -69,7 +69,8 @@ name: "Upload",
         fileReader.onload = function (e) {
           spark.append(e.target.result); // Append array buffer
           currentChunk++;
-
+          _this.validateNum = currentChunk
+          console.log('校验进度', _this.validateNum)
           if (currentChunk < chunks) {
             loadNext();
           } else {
@@ -88,8 +89,6 @@ name: "Upload",
               end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
 
           fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
-          _this.validateNum = currentChunk + 1
-
         }
 
         loadNext();
@@ -124,15 +123,12 @@ name: "Upload",
         form.append("fileMd5Value", fileMd5Value)
         uploadPic(form).then(data => resolve(data.desc))
       })
-
     },
 
     // 第四步: 通知服务器所有分片已上传完成
     notifyServer(fileMd5Value) {
-      // let url = baseUrl + '/merge?md5=' + fileMd5Value + "&fileName=" + file.name + "&size=" + file.size
       finishUpload({md5: fileMd5Value, fileName: file.name, size: file.size}).then(() => alert('上传成功'))
     }
-
   }
 }
 </script>
