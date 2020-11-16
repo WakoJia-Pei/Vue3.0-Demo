@@ -133,10 +133,7 @@
           <span class="goback" @click.stop="selectLogin">返回登录注册</span>
         </div>
       </div> -->
-
     </div>
-
-
   </div>
 </template>
 

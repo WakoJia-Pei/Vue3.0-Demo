@@ -1,43 +1,58 @@
 <template>
-  <input type="file" id="file" v-on:change="getFiles($event)"/>
-
   <div>
-    <div style="display: inline-block">
-      校验进度：<a-progress :percent="validateNum" status="active" />
+    <div class="ant-upload ant-upload-select ant-upload-select-picture-card" style="margin: 0 20px 0 40px">
+      <span role="button" class="ant-upload" @click.stop="$refs.chooseFile.click">
+        <input ref="chooseFile" type="file" accept id="file" style="display: none" @change="getFiles($event)"/>
+        <div>
+          <span class="anticon anticon-plus"><PlusOutlined /></span>
+          <div class="ant-upload-text">上传</div>
+        </div>
+      </span>
     </div>
-    <div>
-      上传进度：<a-progress :percent="uploadNum" status="active" />
+    <div class="progress">
+      <div class="progress-check">
+        校验进度：<a-progress :percent="validateNum" status="active" />
+      </div>
+      <div class="progress-check">
+        上传进度：<a-progress :percent="uploadNum" status="active" />
+      </div>
     </div>
   </div>
-
 </template>
 
 <script>
-import { reactive, toRefs } from 'vue'
+import { reactive, toRefs, computed } from 'vue'
+import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
+import { checkFileMD5, uploadPic, finishUpload } from '@/utils/upload'
 const SparkMD5 = require('@/assets/libs/spark-md5.min')
 let chunkSize = 2 * 1024 * 1024
 let fileSize = 0
 let file = null
 let hasUploaded = 0
 let chunks = 0
-import { checkFileMD5, uploadPic, finishUpload } from '@/utils/upload'
 export default {
   name: "Upload",
   setup() {
     const data = reactive({
-      validateNum: 10,
-      uploadNum: 70
+      validateNum: null,
+      uploadNum: null
     })
+    const val = computed(() => data.validateNum)
+    const up = computed(() => data.uploadNum)
     return {
-      ...toRefs(data)
+      ...toRefs(data),
+      val,
+      up
     }
   },
-  mounted() {},
+  components: {
+    PlusOutlined, LoadingOutlined
+  },
   methods: {
     getFiles(e) {
       file = e.target.files[0]
       fileSize = file.size;
-      this.$options.methods.responseChange(e.target.files[0])
+      this.responseChange(e.target.files[0])
     },
     async responseChange(e) {
       // 第一步：按照 修改时间+文件名称+最后修改时间-->MD5
@@ -55,8 +70,7 @@ export default {
       await this.notifyServer(fileMd5Value)
     },
     md5File(file) {
-      let _this = this
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         let blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice,
             //chunkSize = 2097152, // Read in chunks of 2MB
             chunkSize = file.size / 100,
@@ -66,11 +80,10 @@ export default {
             spark = new SparkMD5.ArrayBuffer(),
             fileReader = new FileReader();
 
-        fileReader.onload = function (e) {
+        fileReader.onload = (e) => {
           spark.append(e.target.result); // Append array buffer
           currentChunk++;
-          _this.validateNum = currentChunk
-          console.log('校验进度', _this.validateNum)
+          this.validateNum = currentChunk
           if (currentChunk < chunks) {
             loadNext();
           } else {
@@ -80,7 +93,7 @@ export default {
           }
         };
 
-        fileReader.onerror = function () {
+        fileReader.onerror = () => {
           console.warn('oops, something went wrong.');
         };
 
@@ -107,13 +120,12 @@ export default {
           await this.upload(i, fileMd5Value, chunks)
           hasUploaded++
           this.uploadNum = Math.floor((hasUploaded / chunks) * 100)
-          console.log('进度纷纷比', this.validateNum, this.uploadNum)
         }
       }
     },
     // 3-2. 上传chunk
     upload(i, fileMd5Value, chunks) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         //构造一个表单，FormData是HTML5新增的
         let end = (i + 1) * chunkSize >= file.size ? file.size : (i + 1) * chunkSize
         let form = new FormData()
@@ -127,12 +139,29 @@ export default {
 
     // 第四步: 通知服务器所有分片已上传完成
     notifyServer(fileMd5Value) {
-      finishUpload({md5: fileMd5Value, fileName: file.name, size: file.size}).then(() => alert('上传成功'))
+      finishUpload({
+        md5: fileMd5Value,
+        fileName: file.name,
+        size: file.size
+      }).then(() => this.$Message.success('上传成功'))
     }
   }
 }
 </script>
 
 <style lang='scss' scoped>
-
+.progress {
+  display: flex;
+  flex-direction: column;
+  margin: 20px;
+  &-check {
+    display: inherit;
+    white-space: nowrap;
+    margin-bottom: 15px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    //display: flex;
+  }
+}
 </style>
