@@ -228,14 +228,12 @@ export default {
       this.textBtn = '保存';
       this.title = '编辑任务';
       this.type = 2;
-
       this.formValidate = {
         id: row.id,
         title: row.title,
         date: this.$Valid.formatDate(row.gmt_expire),
         content: row.content
       }
-
     },
     // 完成/待办任务
     complete(row) {

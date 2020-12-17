@@ -138,7 +138,7 @@
 </template>
 
 <script>
-import { computed, reactive, toRefs } from 'vue'
+import { reactive, toRefs, computed, onMounted } from 'vue'
 import {
   login,
   register,
@@ -165,24 +165,46 @@ export default {
     });
     const isDisabled = computed(() => !(data.formLogin.userName && data.formLogin.userPwd));
     const isRegAble = computed(() => !(data.formLogin.userName && data.formLogin.userPwd && data.formRegister.userPwd2));
+    onMounted(() => {
+      getCookie()
+      getCaptchaSVG()
+    })
+
+    // 获取验证码
+    const getCaptchaSVG = function () {
+      captcha().then(res => {
+        data.captchaPath = res.data
+      })
+    }
+    // 读取cookie
+    const getCookie = function () {
+      if (document.cookie.length > 0) {
+        // 这里显示的格式需要切割一下自己可输出看下
+        let arr = document.cookie.split('; ');
+        console.log(arr)
+        for (let i = 0; i < arr.length; i++) {
+          // 再次切割
+          let arr2 = arr[i].split('=');
+          // 判断查找相对应的值
+          if (arr2[0] === 'userName') {
+            // 保存数据并赋值
+            data.formLogin.userName = arr2[1];
+          } else if (arr2[0] === 'userPwd') {
+            data.formLogin.userPwd = arr2[1];
+          }
+        }
+      }
+    }
 
     return {
       ...toRefs(data),
       isDisabled,
-      isRegAble
+      isRegAble,
+      getCookie,
+      getCaptchaSVG
     }
   },
-
-  mounted() {
-    this.getCookie();
-    this.getCaptchaSVG();
-  },
   methods: {
-    getCaptchaSVG() {
-      captcha().then(res => {
-        this.captchaPath = res.data
-      })
-    },
     // 登录/注册tab切换
     handleTab(type) {
       this.typeView = type;
@@ -313,25 +335,7 @@ export default {
       window.document.cookie = 'userPwd' + '=' + user_pwd + ';path=/;expires=' + exdate.toUTCString();
     },
 
-    // 读取cookie
-    getCookie() {
-      if (document.cookie.length > 0) {
-        // 这里显示的格式需要切割一下自己可输出看下
-        let arr = document.cookie.split('; ');
-        console.log(arr)
-        for (let i = 0; i < arr.length; i++) {
-          // 再次切割
-          let arr2 = arr[i].split('=');
-          // 判断查找相对应的值
-          if (arr2[0] == 'userName') {
-            // 保存数据并赋值
-            this.formLogin.userName = arr2[1];
-          } else if (arr2[0] == 'userPwd') {
-            this.formLogin.userPwd = arr2[1];
-          }
-        }
-      }
-    },
+
 
     //清除cookie
     clearCookie() {
