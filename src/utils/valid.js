@@ -45,7 +45,7 @@ const formatNumber = n => {
 }
 export function formatDate(value) {
   if (!value) {
-    return '';
+    return null;
   }
   let d = new Date(value);
   let year = d.getFullYear();

@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import { computed } from 'vue'
 import {StarOutlined, StarFilled} from '@ant-design/icons-vue';
 export default {
   name: "StarMark",
@@ -27,15 +28,20 @@ export default {
       default: false
     }
   },
-  computed: {
-    customStyle() {
+  setup(props, context) {
+    console.log('打印setup参数: ', props, context)
+    const customStyle = computed(() => {
       let sty = {
-        fontSize: this.size + 'px',
+        fontSize: props.size + 'px',
       }
-      if (!this.isFilled) {
-        sty.color = this.color ? this.color : 'rgb(255, 85, 0)'
+      if (!props.isFilled) {
+        sty.color = props.color ? props.color : 'rgb(255, 85, 0)'
       }
       return sty
+    })
+
+    return {
+      customStyle
     }
   }
 }

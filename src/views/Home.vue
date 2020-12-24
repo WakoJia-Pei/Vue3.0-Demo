@@ -4,7 +4,7 @@
     <div class="content clearfix">
       <div class="list">
         <h2>任务列表</h2>
-        <a-button type="primary" size="large" @click="addTask">
+        <a-button type="primary" size="large" @click="onClickAddTask">
           <template v-slot:icon><PlusOutlined /></template>添加任务
         </a-button>
       </div>
@@ -18,17 +18,17 @@
           :data-source="tableData"
           @change="handleTableChange"
       >
-        <template v-slot:name="{ text, record, index }">
+        <template #name="{ text, record, index }">
           <star-mark size="16" :is-filled="record.is_major == 0" @click="toggleFav(record, index)" ></star-mark>
           {{text}}
         </template>
-        <template v-slot:expireDate="{text}">
+        <template #expireDate="{text}">
           {{$Valid.formatDate(text)}}
         </template>
         <template v-slot:status="{text}">
           {{text == 2 ? '删除' : text == 1 ? '完成' : '待办'}}
         </template>
-        <template v-slot:operation="{record, index}">
+        <template #operation="{record, index}">
           <a-button style="margin-right: 10px" @click="edit(record, index)" v-if="record.status != 2">编辑</a-button>
           <a-button type="primary" ghost style="margin-right: 10px" @click="complete(record)" v-if="record.status != 2">{{ record.status == 0 ? '完成' : record.status == 1 ? '待办' : null}}</a-button>
           <a-button type="danger" ghost @click="remove(record.id)" v-if="record.status != 2">删除</a-button>
@@ -36,7 +36,7 @@
       </a-table>
     </div>
 
-<!--    <Footer />-->
+    <!--    <Footer />-->
 
     <a-drawer
         :title="title"
@@ -46,29 +46,28 @@
         :mask-closable="false"
         :loading="loading"
     >
-      <a-form :model="formValidate" ref="formValidate" :rules="ruleValidate" v-bind="layout">
+      <a-form v-bind="layout">
         <a-row :gutter="32">
           <a-col span="24">
-            <a-form-item label="任务名称" name="title">
+            <a-form-item label="任务名称" name="formValidate.title" v-bind="validateInfos.title">
               <a-input v-model:value="formValidate.title" placeholder="请输入任务名称" />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="32">
           <a-col span="24">
-            <a-form-item label="截止日期" name="date">
+            <a-form-item label="截止日期" name="date" v-bind="validateInfos.date">
               <a-date-picker v-model:value="formValidate.date"/>
-<!--              <a-date-picker :editable="false" v-model="formValidate.date" type="date" placeholder="请选择截止日期" style="display: block"></a-date-picker>-->
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="任务内容" name="content">
+        <a-form-item label="任务内容" name="content" v-bind="validateInfos.content">
           <a-input type="textarea" v-model:value="formValidate.content" :rows="8" placeholder="请输入任务内容" />
         </a-form-item>
       </a-form>
       <div class="demo-drawer-footer">
-        <a-button type="primary" style="margin-right: 15px" @click="handleSubmit('formValidate')">{{ textBtn }}</a-button>
-        <a-button @click="handleReset('formValidate')" style="margin-right: 15px">重置</a-button>
+        <a-button type="primary" style="margin-right: 15px" @click="handleSubmit">{{ textBtn }}</a-button>
+        <a-button @click="resetFields" style="margin-right: 15px">重置</a-button>
         <a-button type="error" @click="isShow = false">取消</a-button>
       </div>
     </a-drawer>
@@ -77,6 +76,10 @@
 </template>
 
 <script>
+import { reactive, toRefs, toRaw, computed, onMounted } from 'vue'
+import { useForm } from '@ant-design-vue/use'
+import { message } from 'ant-design-vue';
+import Valid from '@/utils/valid'
 import Header from '@/components/Header';
 import StarMark from '@/components/StarMark';
 import { PlusOutlined } from '@ant-design/icons-vue';
@@ -96,10 +99,10 @@ export default {
     StarMark,
     PlusOutlined,
   },
-  data() {
-    return {
+  setup() {
+    const data = reactive({
       loading: true,
-      pagination: {total: 0, pageSize: 10,},
+      pagination: {total: 0, pageSize: 6,},
       pageNo: 1,
       layout: {
         labelCol: { span: 6 },
@@ -116,12 +119,7 @@ export default {
         paddingBottom: '53px',
         position: 'static'
       },
-      // vue3 & ant-design 演示1
-      formValidate: {
-        title: '',
-        date: '',
-        content: ''
-      },
+
       columns: [
         {
           title: '任务名称',
@@ -159,196 +157,202 @@ export default {
         }
       ],
       tableData: [],
-      ruleValidate: {
-        title: [
-          { required: true, message: '任务名称不能为空', trigger: 'blur' }
-        ],
-        date: [
-          { required: true, type: 'date', message: '请选择截止日期', trigger: 'change' }
-        ],
-        content: [
-          { required: true, message: '请输入任务内容', trigger: 'blur' }
-        ]
-      }
-
-    }
-  },
-  computed: {
-    paginationOpts() {
-      return Math.ceil(this.pagination.total / this.pagination.pageSize) > 1 ? this.pagination : false
-    }
-  },
-  mounted() {
-    this.getTaskList();
-  },
-  methods: {
-    handleTableChange(pagination, filters) {
-      console.log(pagination);
-      const pager = { ...this.pagination };
-      pager.current = pagination.current;
-      this.pagination = pager;
-      this.getTaskList({...filters});
-    },
-
-    // 获取任务列表数据
-    getTaskList(para) {
-      this.loading = true;
+      paginationOpts: computed(() => Math.ceil(data.pagination.total / data.pagination.pageSize) > 1 ? data.pagination : false)
+    });
+    // vue3 & ant-design 演示1
+    let formValidate = reactive({
+      title: '',
+      date: null,
+      content: ''
+    });
+    const ruleValidate = reactive({
+      title: [
+        { required: true, message: '任务名称不能为空', trigger: 'blur' }
+      ],
+      date: [
+        { required: true, type: 'date', message: '请选择截止日期', trigger: 'change' }
+      ],
+      content: [
+        { required: true, message: '请输入任务内容', trigger: 'blur' }
+      ]
+    });
+    const { resetFields, validate, validateInfos } = useForm(formValidate, ruleValidate);
+    function getTaskList(para) {
+      data.loading = true;
       let params = {
-        pageNo: this.pagination.current,
-        pageSize: this.pagination.pageSize,
-        status: this.status,
+        pageNo: data.pagination.current,
+        pageSize: data.pagination.pageSize,
+        status: data.status,
         ...para
       }
-
       queryTaskList(params).then(res => {
         console.log('任务列表===', res);
-        this.loading = false;
+        data.loading = false;
         if (res.code == 0 && res.data) {
-          this.tableData = res.data.rows;
-          this.pagination.total = res.data.total;
+          data.tableData = res.data.rows;
+          data.pagination.total = res.data.total;
         } else {
-          this.tableData = [];
-          this.pagination.total = 0;
+          data.tableData = [];
+          data.pagination.total = 0;
         }
       }).catch(() => {
-        this.loading = false;
+        data.loading = false;
       })
-    },
-    // 添加任务
-    addTask() {
-      this.isShow = true;
-      this.textBtn = '提交';
-      this.title = '添加任务';
-      this.type = 1;
-      this.$refs.formValidate.resetFields();
-    },
+    }
+
+    const  handleTableChange = (pagination, filters) => {
+      const pager = { ...data.pagination };
+      pager.current = pagination.current;
+      data.pagination = pager;
+      getTaskList({...filters});
+    }
+
+    // 点击添加任务按钮
+    function onClickAddTask() {
+      data.isShow = true;
+      data.textBtn = '提交';
+      data.title = '添加任务';
+      data.type = 1;
+      resetFields()
+    }
     // 编辑任务
-    edit(row, index) {
-      this.isShow = true;
-      this.textBtn = '保存';
-      this.title = '编辑任务';
-      this.type = 2;
-      this.formValidate = {
-        id: row.id,
-        title: row.title,
-        date: this.$Valid.formatDate(row.gmt_expire),
-        content: row.content
-      }
-    },
+    function edit(row, idx) {
+      console.log(row, idx)
+      data.isShow = true
+      data.textBtn = '保存'
+      data.title = '编辑任务'
+      data.type = 2
+      formValidate.id = row.id
+      formValidate.title = row.title
+      formValidate.date = Valid.formatDate(row.gmt_expire)
+      formValidate.content = row.content
+    }
     // 完成/待办任务
-    complete(row) {
+    function complete(row) {
       // console.log('我的名', row)
       let status = row.status == 0 ? 1 : row.status == 1 ? 0 : null;
 
-      let data = {
+      let param = {
         id: row.id,
         status: status
       }
 
-      updateTaskStatus(data).then(res => {
+      updateTaskStatus(param).then(res => {
         console.log('操作状态===', res);
         if (res.code == 0) {
-          this.pageNo = 1;
-          this.getTaskList();
-          this.$Message.success('更新任务状态成功');
+          data.pageNo = 1;
+          getTaskList();
+          // data.$Message.success('更新任务状态成功');
+          message.success('更新任务状态成功');
         } else {
-          this.$Message.error(res.msg);
+          // data.$Message.error(res.msg);
+          message.error(res.msg);
         }
       })
-    },
+    }
     // 删除任务
-    remove(id) {
-      let data = {
+    function remove(id) {
+      let param = {
         id: id,
         status: 2
       }
 
-      deleteTask(data).then(res => {
+      deleteTask(param).then(res => {
         console.log('删除任务===', res);
         if (res.code == 0) {
-          this.pageNo = 1;
-          this.getTaskList();
-          this.$Message.success('任务删除成功');
+          data.pageNo = 1;
+          getTaskList();
+          // data.$Message.success('任务删除成功');
+          message.success('任务删除成功');
         } else {
-          this.$Message.error(res.msg);
+          // data.$Message.error(res.msg);
+          message.error(res.msg);
         }
       })
-      // this.data.splice(index, 1);
-    },
+      // data.data.splice(index, 1);
+    }
     // 提交添加或编辑
-    handleSubmit(name) {
-      this.$refs[name].validate().then(() => {
-        if (this.type == 1) {
-          let data = {
-            title: this.formValidate.title,
-            gmt_expire: new Date(this.formValidate.date.toString()).getTime(),
-            content: this.formValidate.content
+    function handleSubmit(e) {
+      e.preventDefault();
+      validate().then(async res => {
+        console.log(res, toRaw(formValidate));
+        let _data = {}
+        let resCode = null, resMsg = null
+        if(data.type === 1) {
+          _data = {
+            title: res.title,
+            gmt_expire: new Date(res.date.toString()).getTime(),
+            content: res.content
           }
-          addTask(data).then(res => {
-            console.log('添加任务===', res)
-            this.isShow = false;
-            if (res.code == 0) {
-              this.pageNo = 1;
-              this.getTaskList();
-              this.$Message.success(`${this.title}成功`);
-            } else {
-              this.$Message.error(res.msg);
-            }
-          }).catch(() => {
-            this.isShow = false;
-          })
-        } else if (this.type == 2) {
-          let data = {
-            id: this.formValidate.id,
-            title: this.formValidate.title,
-            gmt_expire: new Date(this.formValidate.date.toString()).getTime(),
-            content: this.formValidate.content
-          }
-
-          editTask(data).then(res => {
-            console.log('编辑任务===', res)
-            this.isShow = false;
-            if (res.code == 0) {
-              this.pageNo = 1;
-              this.getTaskList();
-              this.$Message.success(`${this.title}成功`);
-            } else {
-              this.$Message.error(res.msg);
-            }
-          }).catch(() => {
-            this.isShow = false;
-          })
+          const { code, msg } = await addTask(_data).catch(() => data.isShow = false)
+          resCode = code
+          resMsg = msg
         }
-      })
-    },
-    // 重置表单
-    handleReset (name) {
-      this.$refs[name].resetFields();
-    },
+        if(data.type === 2) {
+          _data = {
+            id: toRaw(formValidate).id,
+            title: res.title,
+            gmt_expire: new Date(toRaw(formValidate).date.toString()).getTime(),
+            content: res.content
+          }
+          const { code, msg } = await editTask(_data).catch(() => data.isShow = false)
+          resCode = code
+          resMsg = msg
+        }
+        data.isShow = false;
+        if (resCode === 0) {
+          data.pageNo = 1;
+          getTaskList();
+          // data.$Message.success(`${data.title}成功`);
+          message.success(`${data.title}成功`);
+        } else {
+          message.info(`${ resMsg }`, 5);
+        }
+      }).catch(err => console.log('error', err));
+    }
     // 重要或不重要
-    toggleFav (row, index) {
+    function toggleFav (row, index) {
       if (row.status == 2) {
-        this.$Message.error('数据已删除');
+        // data.$Message.error('数据已删除');
+        message.error('数据已删除');
       } else {
         // is_major: 0:不重要 1:重要
-        this.tableData[index].is_major = this.tableData[index].is_major === 0 ? 1 : 0;
+        data.tableData[index].is_major = data.tableData[index].is_major === 0 ? 1 : 0;
 
-        let data = {
+        let _data = {
           id: row.id,
-          is_major: this.tableData[index].is_major
+          is_major: data.tableData[index].is_major
         }
 
-        updateMark(data).then(res => {
+        updateMark(_data).then(res => {
           console.log('操作标记===', res);
           if (res.code == 0) {
-            this.pageNo = 1;
-            this.getTaskList();
-            this.$Message.success('更新标记成功');
+            data.pageNo = 1;
+            getTaskList();
+            // data.$Message.success('更新标记成功');
+            message.success('更新标记成功');
           } else {
-            this.$Message.error(res.msg);
+            // data.$Message.error(res.msg);
+            message.error(res.msg);
           }
         })
       }
+    }
+    onMounted(() => {
+      getTaskList()
+    })
+    return {
+      ...toRefs(data),
+      validateInfos,
+      resetFields,
+      formValidate,
+      onClickAddTask,
+      handleTableChange,
+      handleSubmit,
+      edit,
+      complete,
+      remove,
+      toggleFav
     }
   }
 }
