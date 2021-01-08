@@ -16,7 +16,7 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(config => {
   if (store.state.userInfo.data.token) {
-    config.headers['authorization'] = store.state.userInfo.data.token;
+    config.headers['authorization'] = store.getters['user/accessToken'];
   }
 
   return config;
@@ -30,9 +30,7 @@ service.interceptors.response.use(
     // console.log(response.data)
     // 抛出401错误，因为token失效，重新刷新页面，清空缓存，跳转到登录界面
     if (response.data.code === 401 || response.data.code === 403) {
-      store.dispatch('userInfo/logout').then(() => {
-        location.reload();
-      });
+      store.dispatch('userInfo/resetAll').catch(() => {});
     }
 
     return response.data;
@@ -41,9 +39,7 @@ service.interceptors.response.use(
     const { status } = error.response;
 
     if (status === 401 || status === 403) {
-      store.dispatch('userInfo/logout').then(() => {
-        location.reload();
-      });
+      store.dispatch('user/resetAll').catch(() => {})
     }
 
     return Promise.reject(error)

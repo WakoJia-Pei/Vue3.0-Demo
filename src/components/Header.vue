@@ -69,7 +69,7 @@ export default {
     return {
       modal: false,
       modalLoading: false,
-      username: this.$store.state.userInfo.data.userData.username,
+      username: this.$store.getters['user/username'],
       formItem: {
         oldPassword: '',
         newPassword: '',
@@ -135,7 +135,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .header-container {
   .header {
     width: 100%;
@@ -273,7 +273,7 @@ export default {
 
 }
 </style>
-<style lang="scss">
+<style lang="less">
 .vertical-center-modal{
   display: flex;
   align-items: center;

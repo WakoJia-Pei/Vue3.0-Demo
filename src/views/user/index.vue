@@ -83,71 +83,27 @@
             @click.stop="register">
           立即注册
         </a-button>
-        <!--  <div class="option">
-           <Checkbox class="remember" v-model="checked" @on-change="checkChange">
-             <span class="checked">我已阅读并接受</span>
-           </Checkbox>
-           <label class="protocol">《用户协议》</label>
-         </div> -->
-      </div>
-
-      <!-- 忘记密码 -->
-      <!-- <div class="right-content" v-show="typeView == 2">
-        <div class="title">重置密码</div>
-        <div class="input-box">
-          <input
-            autocomplete="off"
-            type="text"
-            class="input"
-            v-model="formReset.userName"
-            placeholder="请输入登录邮箱/手机号"
-          />
-          <input
-            autocomplete="off"
-            type="password"
-            class="input"
-            v-model="formReset.userPwd"
-            maxlength="20"
-            @keyup.enter="reset"
-            placeholder="请输入密码"
-          />
-          <input
-            autocomplete="off"
-            type="password"
-            class="input"
-            v-model="formReset.userPwd2"
-            maxlength="20"
-            @keyup.enter="reset"
-            placeholder="请再次确认密码"
-          />
-        </div>
-        <Button
-          class="loginBtn"
-          type="primary"
-          :disabled="isResetAble"
-          :loading="isLoading"
-          @click.stop="reset">
-          确认重置
-        </Button>
         <div class="option">
-          <span class="goback" @click.stop="selectLogin">返回登录注册</span>
-        </div>
-      </div> -->
+           <a-checkbox class="remember" v-model="checked" @on-change="checkChange">
+             <span class="checked">我已阅读并接受</span>
+           </a-checkbox>
+           <label class="protocol">《用户协议》</label>
+         </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { reactive, toRefs, computed, onMounted } from 'vue'
-import {
-  login,
-  register,
-  captcha
-} from '@/utils/api';
+import { reactive, toRefs, computed, watch, onMounted, getCurrentInstance } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter, useRoute } from 'vue-router'
+import { register, captcha } from '@/utils/api';
 
 export default {
   name: 'login',
   setup() {
+    const internalInstance = getCurrentInstance().appContext.config.globalProperties;
     const data = reactive({
       formLogin: {
         userName: '138@qq.com',
@@ -161,10 +117,60 @@ export default {
       typeView: 0, //显示不同的view
       checked: false, // 记住登录
       isLoading: false,
-      captchaPath: ''
+      captchaPath: '',
+      redirect: undefined
     });
+    const store = useStore();
+    const router = useRouter();
     const isDisabled = computed(() => !(data.formLogin.userName && data.formLogin.userPwd));
     const isRegAble = computed(() => !(data.formLogin.userName && data.formLogin.userPwd && data.formRegister.userPwd2));
+    const logo = computed(() => store.getters['settings/logo']);
+    const title = computed(() => store.getters['settings/title']);
+    const login = async () => {
+      if (data.isDisabled || data.isLoading) {
+        return false;
+      }
+
+      if (!internalInstance.$Valid.validUserName(data.formLogin.userName)) {
+        internalInstance.$Message.error('请输入正确的邮箱/手机号');
+        return false;
+      }
+
+      if (!internalInstance.$Valid.validPass(data.formLogin.userPwd)) {
+        internalInstance.$Message.error('密码应为8到20位字母或数字！');
+        return false;
+      }
+
+      // 判断复选框是否被勾选，勾选则调用配置cookie方法
+      if (data.checked) {
+        // 传入账号名，密码，和保存天数3个参数
+        setCookie(data.formLogin.userName, data.formLogin.userPwd, 7);
+      } else {
+        // 清空Cookie
+        clearCookie();
+      }
+
+      data.isLoading = true;
+
+      let form = {
+        username: data.formLogin.userName,
+        password: data.formLogin.userPwd
+      };
+      await store.dispatch('user/login', form)
+      setTimeout(() => {
+        data.isLoading = false;
+        router.push(handleRouter())
+      }, 3000)
+    }
+    function handleRouter() {
+      return data.redirect === '/404' || data.redirect === '/403'
+          ? '/'
+          : data.redirect
+    }
+    const route = useRoute()
+    watch(route, () => {
+      data.redirect = (route.query && route.query.redirect) || '/'
+    }, { immediate: true })
     onMounted(() => {
       getCookie()
       getCaptchaSVG()
@@ -181,7 +187,6 @@ export default {
       if (document.cookie.length > 0) {
         // 这里显示的格式需要切割一下自己可输出看下
         let arr = document.cookie.split('; ');
-        console.log(arr)
         for (let i = 0; i < arr.length; i++) {
           // 再次切割
           let arr2 = arr[i].split('=');
@@ -196,90 +201,60 @@ export default {
       }
     }
 
+    // 设置cookie
+    function setCookie(user_name, user_pwd, exdays) {
+      // 获取时间
+      let exdate = new Date();
+      // 保存的天数
+      exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 1000 * exdays);
+      // 字符串拼接cookie
+      window.document.cookie = 'userName' + '=' + user_name + ';path=/;expires=' + exdate.toUTCString();
+      window.document.cookie = 'userPwd' + '=' + user_pwd + ';path=/;expires=' + exdate.toUTCString();
+    }
+    //清除cookie
+    function clearCookie() {
+      // 修改前2个值都为空，天数为负1天就好了
+      setCookie('', '', -1);
+    }
     return {
       ...toRefs(data),
       isDisabled,
       isRegAble,
+      logo,
+      title,
       getCookie,
-      getCaptchaSVG
+      getCaptchaSVG,
+      login
     }
   },
+  // watch: {
+  //   $route: {
+  //     handler(route) {
+  //       console.log('裸游的参数', route.query)
+  //       this.redirect = (route.query && route.query.redirect) || '/'
+  //     },
+  //     immediate: true,
+  //   },
+  // },
   methods: {
     // 登录/注册tab切换
     handleTab(type) {
       this.typeView = type;
       this.clearInput();
     },
-    // 输入框焦点样式
-    focusInput(index) {
-      if (index === 1)
-        this.$refs.loginVerifyCode.style.borderBottomColor = '#0f52e0';
-      else this.$refs.resetVerifyCode.style.borderBottomColor = '#0f52e0';
-    },
-    blurInput(index) {
-      if (index === 2)
-        this.$refs.resetVerifyCode.style.borderBottomColor = '#e7e7e7';
-      else this.$refs.loginVerifyCode.style.borderBottomColor = '#e7e7e7';
-    },
-    // 返回登录界面
-    selectLogin() {
-      this.typeView = 0;
-      this.clearInput();
-    },
+
     // 忘记密码界面
     forgetPwd() {
       this.$Message.info('忘记密码，暂时没做好！！！');
       // this.typeView = 2;
       // this.clearInput();
     },
-
-    // 立即登录
-    login() {
-      if (this.isDisabled || this.isLoading) {
-        return false;
-      }
-
-      if (!this.$Valid.validUserName(this.formLogin.userName)) {
-        this.$Message.error('请输入正确的邮箱/手机号');
-        return false;
-      }
-
-      if (!this.$Valid.validPass(this.formLogin.userPwd)) {
-        this.$Message.error('密码应为8到20位字母或数字！');
-        return false;
-      }
-
-      // 判断复选框是否被勾选，勾选则调用配置cookie方法
-      if (this.checked) {
-        // 传入账号名，密码，和保存天数3个参数
-        this.setCookie(this.formLogin.userName, this.formLogin.userPwd, 7);
-      } else {
-        // 清空Cookie
-        this.clearCookie();
-      }
-
-      this.isLoading = true;
-
-      let form = {
-        username: this.formLogin.userName,
-        password: this.formLogin.userPwd
-      };
-
-      login(form).then(res => {
-        console.log('登录===', res);
-        this.isLoading = false;
-        if (res.code == 0) {
-          this.$store.dispatch('userInfo/saveInfo', res.data);
-          this.$router.push('/');
-          this.$Message.success('登录成功');
-          this.clearInput();
-        } else {
-          this.$Message.error(res.msg);
-        }
-      }).catch(() => {
-        this.isLoading = false;
-      });
+    handleRoute() {
+      return this.redirect === '/404' || this.redirect === '/403'
+          ? '/'
+          : this.redirect
     },
+
 
     // 立即注册
     register() {
@@ -324,25 +299,6 @@ export default {
       })
     },
 
-    // 设置cookie
-    setCookie(user_name, user_pwd, exdays) {
-      // 获取时间
-      let exdate = new Date();
-      // 保存的天数
-      exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 1000 * exdays);
-      // 字符串拼接cookie
-      window.document.cookie = 'userName' + '=' + user_name + ';path=/;expires=' + exdate.toUTCString();
-      window.document.cookie = 'userPwd' + '=' + user_pwd + ';path=/;expires=' + exdate.toUTCString();
-    },
-
-
-
-    //清除cookie
-    clearCookie() {
-      // 修改前2个值都为空，天数为负1天就好了
-      this.setCookie('', '', -1);
-    },
-
     // 是否勾选记住密码
     checkChange(status) {
       console.log(status);
@@ -365,7 +321,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .login-container {
   //background-image: url('../assets/logo.png');
   background-position: center;

@@ -3,63 +3,156 @@
  * @Author: Wan.Jiang
  * @Date: 2020-10-23
  **/
-// import VueRouter from 'vue-router'
-import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
-import store from "@/store";
+import { createRouter, createWebHashHistory } from 'vue-router'
+import Layout from '@/components/layout'
 
-const routes = [
+export const constantRoutes = [
   {
     path: '/login',
-    name: 'Login',
-    component: () => import('@/views/Login.vue'),
-    meta: { title: '登录界面' }
+    component: () => import('@/views/user'),
+    meta: {title: '登录'},
+    hidden: true,
   },
   {
-    path: '/upload',
-    name: 'Upload',
-    component: () => import('@/views/Upload.vue'),
-    meta: { title: '首页', requireAuth: true }
+    path: '/403',
+    name: '403',
+    component: () => import('@/views/403'),
+    hidden: true,
   },
+  {
+    path: '/404',
+    name: '404',
+    component: () => import('@/views/404'),
+    hidden: true,
+  },
+  // {
+  //   path: '/upload',
+  //   name: 'Upload',
+  //   component: () => import('@/views/Upload.vue'),
+  //   meta: { title: '首页', requireAuth: true }
+  // },
+]
+
+export const asyncRoutes = [
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/views/Home.vue'),
-    meta: { title: '首页', requireAuth: true }
+    component: Layout,
+    redirect: '/index',
+    meta: {
+      title: '首页',
+      icon: 'home-4-line',
+      affix: true,
+    },
+    children: [
+      {
+        path: 'index',
+        name: 'Index',
+        component: () => import('@/views/index'),
+        meta: {
+          title: '首页',
+          icon: 'home-4-line',
+          affix: true,
+          requireAuth: true
+        },
+      },
+    ],
   },
   {
+    path: '/componentsLib',
+    component: Layout,
+    redirect: '/componentsLib/table',
+    alwaysShow: true,
+    meta: { title: '组件', icon: 'apps-line' },
+    children: [
+      {
+        path: 'table',
+        name: 'Table',
+        component: () => import('@/views/componentsLib/table'),
+        meta: {
+          title: '表格',
+          icon: 'table-2',
+        },
+      },
+      {
+        path: 'icon',
+        name: 'Icon',
+        component: () => import('@/views/componentsLib/icon'),
+        meta: {
+          title: '图标',
+          icon: 'remixicon-line',
+        },
+      },
+    ],
+  },
+  // {
+  //   path: '/test',
+  //   component: Layout,
+  //   redirect: '/test/test',
+  //   meta: {
+  //     title: '动态路由测试',
+  //     icon: 'test-tube-line',
+  //   },
+  //   children: [
+  //     {
+  //       path: 'test',
+  //       name: 'Test',
+  //       component: () => import('@/views/test'),
+  //       meta: {
+  //         title: '动态路由测试',
+  //         icon: 'test-tube-line',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   path: '/error',
+  //   name: 'Error',
+  //   component: Layout,
+  //   redirect: '/error/403',
+  //   meta: {
+  //     title: '错误页',
+  //     icon: 'error-warning-line',
+  //   },
+  //   children: [
+  //     {
+  //       path: '403',
+  //       name: 'Error403',
+  //       component: () => import('@/views/403'),
+  //       meta: {
+  //         title: '403',
+  //         icon: 'error-warning-line',
+  //       },
+  //     },
+  //     {
+  //       path: '404',
+  //       name: 'Error404',
+  //       component: () => import('@/views/404'),
+  //       meta: {
+  //         title: '404',
+  //         icon: 'error-warning-line',
+  //       },
+  //     },
+  //   ],
+  // },
+  {
     path: '/*',
-    redirect: '/'
-  }
+    redirect: '/404',
+    hidden: true,
+  },
 ]
-const router = createRouter({
-  history: createWebHistory(), // hash模式：createWebHashHistory，history模式：createWebHistory
-  base: process.env.BASE_URL,
-  routes
-})
-// 实现全局路由守卫
-router.beforeEach((to, from, next) => {
-  if (to.meta.title) {
-    document.title = to.meta.title;
-  }
 
-  if (to.meta.requireAuth) {
-    // console.log('Vuex状态管理的变量', store.state.userInfo.data)
-    if (store.state.userInfo.data.token) {
-      if (to.path == '/login') {
-        next('/');
-      } else {
-        next();
-      }
-    } else {
-      next('/login');
-    }
-  } else {
-    if (store.state.userInfo.data.token) {
-      next('/');
-    } else {
-      next();
-    }
-  }
+const router = createRouter({
+  history: createWebHashHistory(), // hash模式：createWebHashHistory，history模式：createWebHistory
+  base: process.env.BASE_URL,
+  routes: constantRoutes
 })
+
+export function resetRouter() {
+  router.matcher = createRouter({
+    history: createWebHashHistory(), // hash模式：createWebHashHistory，history模式：createWebHistory
+    base: process.env.BASE_URL,
+    routes: constantRoutes
+  }).matcher
+}
 
 export default router

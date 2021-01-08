@@ -59,12 +59,12 @@ export function formatTime(value) {
     return '';
   }
   let d = new Date(value);
-  let year = d.getFullYear();
+  // let year = d.getFullYear();
   let month = d.getMonth() + 1;
   let day = formatNumber(d.getDate());
   let hour = formatNumber(d.getHours());
-  let minutes = formatNumber(d.getMinutes());
-  let seconds = formatNumber(d.getSeconds());
+  // let minutes = formatNumber(d.getMinutes());
+  // let seconds = formatNumber(d.getSeconds());
   return  month + '月' + day + '日' + ' ' + hour + '时';
 }
 
@@ -81,15 +81,19 @@ export function timeFromNow(value) {
   switch (true) {
     case timestamp > 86400000:
       return `${Math.floor(timestamp / 86400000)}天前`
+      // eslint-disable-next-line no-unreachable
       break;
     case timestamp > 3600000:
       return `${Math.floor(timestamp / 3600000)}小时前`
+      // eslint-disable-next-line no-unreachable
       break;
     case timestamp > 60000:
       return `${Math.floor(timestamp / 60000)}分钟前`
+      // eslint-disable-next-line no-unreachable
       break;
     case timestamp > 1000:
       return `${Math.floor(timestamp / 1000)}秒钟前`
+      // eslint-disable-next-line no-unreachable
       break;
   }
 }

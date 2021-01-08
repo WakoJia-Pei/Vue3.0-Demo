@@ -3,6 +3,7 @@
  * @Author: Wan.Jiang
  * @Date: 2020-10-23
  **/
+import { login } from '@/utils/api'
 const userInfo = {
   namespaced: true,
   state: {
@@ -46,6 +47,11 @@ const userInfo = {
     // 保存自动登录
     saveAutoLogin({ commit }, isLogin) {
       commit('setAutoLogin', isLogin)
+    },
+    login({ commit }, userInfo) {
+      login(userInfo).then(res => {
+        commit('setUserInfo', res.data)
+      })
     },
     // 退出登录
     logout({commit}) {
