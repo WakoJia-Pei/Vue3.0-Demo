@@ -157,21 +157,10 @@ module.exports = {
   },
   runtimeCompiler: true,
   productionSourceMap: false,
-  css: {
-    requireModuleExtension: true,
-    sourceMap: true,
-    loaderOptions: {
-      less: {
-        lessOptions: {
-          javascriptEnabled: true,
-          modifyVars: {
-            'vab-color-blue': '#1890ff',
-            'vab-margin': '20px',
-            'vab-padding': '20px',
-            'vab-header-height': '65px',
-          },
-        },
-      },
-    },
-  },
+  pluginOptions: { // 第三方插件配置
+    'style-resources-loader': {
+      preProcessor: 'less',
+      patterns: [path.resolve(__dirname, 'src/styles/variables.less')] // less所在文件路径
+    }
+  }
 }

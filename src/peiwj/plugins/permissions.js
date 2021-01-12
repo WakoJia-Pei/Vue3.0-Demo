@@ -12,6 +12,7 @@ import {
   routesWhiteList,
 } from '@/config'
 import ProgressBar from 'nprogress'
+import 'nprogress/nprogress.css'
 import getPageTitle from '@/utils/pageTitle'
 
 ProgressBar.configure({

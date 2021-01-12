@@ -348,7 +348,7 @@ import {
   display: flex;
   justify-content: space-between;
   align-content: center;
-  padding: 20px 0 30px;
+  padding: 0 0 20px;
   h2 {
     line-height: 36px;
   }
